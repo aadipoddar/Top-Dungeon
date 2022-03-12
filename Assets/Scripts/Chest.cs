@@ -9,11 +9,11 @@ public class Chest : Collectable
 
     protected override void OnCollect()
     {
-        if(!collected)
+        if (!collected)
         {
             collected = true;
             GetComponent<SpriteRenderer>().sprite = emptyChest;
-            Debug.Log("You found " + pesosAmount + " pesos!");
+            GameManager.instance.ShowText("+" + pesosAmount + " pesos!", 25, Color.yellow, transform.position, Vector3.up * 25, 1.5f);
         }
     }
 }

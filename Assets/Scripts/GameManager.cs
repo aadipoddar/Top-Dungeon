@@ -12,12 +12,16 @@ public class GameManager : MonoBehaviour
         if (GameManager.instance != null)
         {
             Destroy(gameObject);
+            Destroy(player.gameObject);
+            Destroy(floatingTextManager.gameObject);
+            Destroy(hud);
+            Destroy(menu);
             return;
         }
 
         instance = this;
         SceneManager.sceneLoaded += LoadState;
-        DontDestroyOnLoad(gameObject);
+        SceneManager.sceneLoaded += OnSceneLoaded;
     }
 
     // Resources
@@ -29,8 +33,11 @@ public class GameManager : MonoBehaviour
     // References
     public Player player;
     public Weapon weapon;
-
     public FloatingTextManager floatingTextManager;
+    public RectTransform hitpointBar;
+    public Animator deathMenuAnim;
+    public GameObject hud;
+    public GameObject menu;
 
     // Logic
     public int pesos;
@@ -58,6 +65,13 @@ public class GameManager : MonoBehaviour
         }
 
         return false;
+    }
+
+    //Hitpoint Bar
+    public void OnHitpointChange()
+    {
+        float ratio = (float)player.hitpoint / (float)player.maxHitpoint;
+        hitpointBar.localScale = new Vector3(1, ratio, 1);
     }
 
     // Experience System
@@ -103,8 +117,22 @@ public class GameManager : MonoBehaviour
 
     public void OnLevelUp()
     {
-        Debug.Log("Level Up!");
         player.OnLevelUp();
+        OnHitpointChange();
+    }
+
+    // On Scene Loaded
+    public void OnSceneLoaded(Scene s, LoadSceneMode mode)
+    {
+        player.transform.position = GameObject.Find("SpawnPoint").transform.position;
+    }
+
+    // Death Menu and Respawn
+    public void Respawn()
+    {
+        deathMenuAnim.SetTrigger("Hide");
+        UnityEngine.SceneManagement.SceneManager.LoadScene("Main");
+        player.Respawn();
     }
 
 
@@ -129,13 +157,14 @@ public class GameManager : MonoBehaviour
 
     public void LoadState(Scene s, LoadSceneMode mode)
     {
+        SceneManager.sceneLoaded -= LoadState;
+
         if (!PlayerPrefs.HasKey("SaveState"))
             return;
 
         string[] data = PlayerPrefs.GetString("SaveState").Split('|');
 
         // Change Player Skin
-
         pesos = int.Parse(data[1]);
 
         // Experience
